@@ -13,7 +13,7 @@ twilight-http = "0.17"
 twilight-model = "0.17"
 twilight-cache-inmemory = "0.17"
 twilight-util = { version = "0.17", features = ["builder"] }
-sea-orm = { version = "1", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }
+sea-orm = { version = "2", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }
 tokio = { version = "1", features = ["full"] }
 futures = "0.3"
 serde = { version = "1", features = ["derive"] }
