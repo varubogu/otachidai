@@ -5,8 +5,9 @@
 # https://containers.dev/guide/dependabot
 #
 # Schedule: weekly, Monday 09:00 Asia/Tokyo.
-# Minor and patch updates are grouped into one pull request per ecosystem entry.
-# Major updates stay as separate pull requests.
+# Each ecosystem groups minor and patch updates into a single pull request.
+# Major updates for those ecosystems stay as separate pull requests.
+# GitHub Actions are the exception: every update type is one group.
 # open-pull-requests-limit: 5.
 
 version: 2
@@ -91,6 +92,7 @@ updates:
 
   # GitHub Actions in .github/workflows. directory "/" is required;
   # Dependabot searches .github/workflows from the repository root.
+  # One group covers major, minor, and patch so action bumps share a PR.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -100,9 +102,6 @@ updates:
       timezone: "Asia/Tokyo"
     open-pull-requests-limit: 5
     groups:
-      minor-and-patch:
+      github-actions:
         patterns:
           - "*"
-        update-types:
-          - "minor"
-          - "patch"
