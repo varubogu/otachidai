@@ -3,10 +3,105 @@
 # Please see the documentation for more information:
 # https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
 # https://containers.dev/guide/dependabot
+#
+# Schedule: weekly, Monday 09:00 Asia/Tokyo.
+# Each ecosystem groups minor and patch updates into a single pull request.
+# Major updates for those ecosystems stay as separate pull requests.
+# GitHub Actions are the exception: every update type is one group.
+# open-pull-requests-limit: 5.
 
 version: 2
 updates:
- - package-ecosystem: "devcontainers"
-   directory: "/"
-   schedule:
-     interval: weekly
+  # Dev Container Features in .devcontainer/devcontainer.json
+  # (and devcontainer-lock.json). directory "/" is the documented location.
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Cargo.toml / Cargo.lock at the repository root (app crate).
+  # migration/ is a separate package, not a workspace member.
+  - package-ecosystem: "cargo"
+    directories:
+      - "/"
+      - "/migration"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Dockerfiles: Dockerfile.app, Dockerfile.db, Dockerfile.maintenance,
+  # Dockerfile.migration, and .devcontainer/Dockerfile.
+  - package-ecosystem: "docker"
+    directories:
+      - "/"
+      - "/.devcontainer"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Compose files: docker-compose.yml and .devcontainer/docker-compose.yml.
+  # Ecosystem value is docker-compose (GA; separate from docker).
+  - package-ecosystem: "docker-compose"
+    directories:
+      - "/"
+      - "/.devcontainer"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions in .github/workflows. directory "/" is required;
+  # Dependabot searches .github/workflows from the repository root.
+  # One group covers major, minor, and patch so action bumps share a PR.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns:
+          - "*"
