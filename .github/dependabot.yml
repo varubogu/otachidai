@@ -12,7 +12,7 @@
 
 version: 2
 updates:
-  # Dev Container Features in .devcontainer/devcontainer.json
+  # Existing entry: Dev Container Features in .devcontainer/devcontainer.json
   # (and devcontainer-lock.json). directory "/" is the documented location.
   - package-ecosystem: "devcontainers"
     directory: "/"
