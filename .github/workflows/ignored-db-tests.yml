@@ -40,19 +40,24 @@ jobs:
           --health-retries 10
 
     env:
-      # StartupValidator 向け必須環境変数
+      # 結合テストは DB_* と GUILD_DB_* で接続する。
+      # migration バイナリは DATABASE_URL のみを読む（.env は CI に無い）。
+      # ロール名は db/sql/init.sql が作成する otachidai_bot_* に合わせる。
       DISCORD_TOKEN: "dummy_discord_token_for_ci_1234567890"
       BOT_ADMIN_SERVER_ID: "12345678901234567"
       DB_HOST: "127.0.0.1"
       DB_PORT: "5432"
       DB_NAME: "otachidai_db"
-      SYSTEM_DB_USER: "otachidai_system",
+      SYSTEM_DB_USER: "otachidai_bot_system"
       SYSTEM_DB_PASSWORD: "ci_system_password"
-      GUILD_DB_USER: "otachidai_guild"
+      GUILD_DB_USER: "otachidai_bot_guild"
       GUILD_DB_PASSWORD: "ci_guild_password"
-      ADMIN_DB_USER: "otachidai_admin"
+      GLOBAL_DB_USER: "otachidai_bot_global"
+      GLOBAL_DB_PASSWORD: "ci_global_password"
+      ADMIN_DB_USER: "otachidai_bot_admin"
       ADMIN_DB_PASSWORD: "ci_admin_password"
       CLEANUP_DB_PASSWORD: "ci_cleanup_password"
+      DATABASE_URL: "postgres://otachidai_bot_admin:ci_admin_password@127.0.0.1:5432/otachidai_db"
       RUST_TEST_THREADS: "1"
 
     steps:
@@ -69,7 +74,7 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: |
-          for i in {1..30}; do
+          for _ in {1..30}; do
             if pg_isready -h "${DB_HOST}" -p "${DB_PORT}" -U postgres -d postgres; then
               exit 0
             fi

@@ -4,7 +4,7 @@
 //! 各テストは [`crate::integration::support::with_test_guild`] のトランザクション内で走り、
 //! 終了時に rollback されるため互いに干渉しない。
 
-use crate::integration::support::{seed_room, with_test_guild};
+use crate::integration::support::{seed_room, with_system_test_guild, with_test_guild};
 use otachidai::entities::rental_sessions::{
     STATE_ACTIVE, STATE_AWAITING_PURPOSE, STATE_PENDING_HANDOFF, STATE_RELEASED,
 };
@@ -293,7 +293,8 @@ async fn find_active_sessions_by_guild_lists_all_live_states() {
 #[ignore]
 async fn mark_session_tasks_processed_flags_all_pending_tasks() {
     let guild_id: u64 = 999_200_000_000_000_011;
-    with_test_guild(guild_id, |txn| {
+    // worker.scheduled_tasks の UPDATE は system ロール（本番の state.db.system と同じ）。
+    with_system_test_guild(guild_id, |txn| {
         Box::pin(async move {
             let room_id = seed_room(txn, guild_id, 50_014).await?;
             let session = rental::create_session(txn, guild_id, room_id, HOST).await?;
@@ -319,7 +320,7 @@ async fn mark_session_tasks_processed_flags_all_pending_tasks() {
 #[ignore]
 async fn mark_task_processed_flags_single_task() {
     let guild_id: u64 = 999_200_000_000_000_012;
-    with_test_guild(guild_id, |txn| {
+    with_system_test_guild(guild_id, |txn| {
         Box::pin(async move {
             let room_id = seed_room(txn, guild_id, 50_015).await?;
             let session = rental::create_session(txn, guild_id, room_id, HOST).await?;
