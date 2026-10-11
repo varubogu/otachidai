@@ -6,7 +6,7 @@
 //!
 //! `cargo test -- --ignored` で実行（実 PostgreSQL が必要）。
 
-use crate::integration::support::with_test_guild;
+use crate::integration::support::{with_system_test_guild, with_test_guild};
 use otachidai::entities::rental_sessions::{STATE_ACTIVE, STATE_PENDING_HANDOFF, STATE_RELEASED};
 use otachidai::entities::scheduled_tasks;
 use otachidai::facade::{guild_settings, rental, room};
@@ -81,7 +81,8 @@ async fn handoff_transfers_host() {
 #[ignore]
 async fn timeout_releases_session_and_marks_tasks_processed() {
     let guild_id: u64 = 999_500_000_000_000_003;
-    with_test_guild(guild_id, |txn| {
+    // 解放は guild でもできるが、タスクの processed 更新は system ロールが行う。
+    with_system_test_guild(guild_id, |txn| {
         Box::pin(async move {
             guild_settings::ensure_guild(txn, guild_id).await?;
             let r = room::register_room(txn, guild_id, None, Some(60_003), None, None).await?;

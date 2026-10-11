@@ -23,20 +23,42 @@ use sea_orm::{
 /// テスト専用DBへの接続文字列を環境変数から組み立てる。
 /// 既存の facade テストと同じ変数（`GUILD_DB_*` / `DB_*`）を使う。
 fn db_url() -> String {
+    role_db_url("GUILD_DB_USER", "GUILD_DB_PASSWORD", "otachidai_guild")
+}
+
+/// `worker.scheduled_tasks` の UPDATE は system ロール専用（guild は SELECT/INSERT のみ）。
+fn system_db_url() -> String {
+    role_db_url(
+        "SYSTEM_DB_USER",
+        "SYSTEM_DB_PASSWORD",
+        "otachidai_bot_system",
+    )
+}
+
+fn role_db_url(user_env: &str, pass_env: &str, default_user: &str) -> String {
     let host = std::env::var("DB_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
     let port = std::env::var("DB_PORT").unwrap_or_else(|_| "5432".to_string());
-    let user = std::env::var("GUILD_DB_USER").unwrap_or_else(|_| "otachidai_guild".to_string());
-    let pass = std::env::var("GUILD_DB_PASSWORD").unwrap_or_default();
+    let user = std::env::var(user_env).unwrap_or_else(|_| default_user.to_string());
+    let pass = std::env::var(pass_env).unwrap_or_default();
     let name = std::env::var("DB_NAME").unwrap_or_else(|_| "otachidai_db".to_string());
     format!("postgres://{user}:{pass}@{host}:{port}/{name}")
 }
 
-/// テスト専用DBへ接続する。
-pub async fn connect() -> DatabaseConnection {
+async fn connect_url(url: String) -> DatabaseConnection {
     dotenvy::dotenv().ok();
-    Database::connect(db_url())
+    Database::connect(url)
         .await
         .expect("テスト専用DBへ接続できること（docker compose で PostgreSQL を起動しているか確認）")
+}
+
+/// テスト専用DBへ接続する。
+pub async fn connect() -> DatabaseConnection {
+    connect_url(db_url()).await
+}
+
+/// system ロール（BYPASSRLS、`worker` の UPDATE 可）で接続する。
+pub async fn connect_system() -> DatabaseConnection {
+    connect_url(system_db_url()).await
 }
 
 /// 開いているトランザクションに RLS のギルドコンテキストを張る。
@@ -67,6 +89,23 @@ where
     F: for<'c> FnOnce(&'c DatabaseTransaction) -> BoxFuture<'c, BotResult<T>>,
 {
     let db = connect().await;
+    let txn = db.begin().await.expect("トランザクション開始");
+    set_guild(&txn, guild_id).await;
+    let result = f(&txn).await.expect("テスト本体が成功すること");
+    txn.rollback().await.expect("rollback");
+    result
+}
+
+/// [`with_test_guild`] と同じ rollback トランザクションを、system ロールで開く。
+///
+/// 本番の `mark_task_processed` / `mark_session_tasks_processed` は
+/// `state.db.system` で実行する。guild ロールには `worker.scheduled_tasks` の
+/// UPDATE が無いため、それらの検証はこちらを使う。
+pub async fn with_system_test_guild<F, T>(guild_id: u64, f: F) -> T
+where
+    F: for<'c> FnOnce(&'c DatabaseTransaction) -> BoxFuture<'c, BotResult<T>>,
+{
+    let db = connect_system().await;
     let txn = db.begin().await.expect("トランザクション開始");
     set_guild(&txn, guild_id).await;
     let result = f(&txn).await.expect("テスト本体が成功すること");
