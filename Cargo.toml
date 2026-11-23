@@ -8,11 +8,11 @@ name = "cleanup"
 path = "src/bin/cleanup.rs"
 
 [dependencies]
-twilight-gateway = "0.17"
+twilight-gateway = "0.18"
 twilight-http = "0.18"
-twilight-model = "0.17"
-twilight-cache-inmemory = "0.17"
-twilight-util = { version = "0.17", features = ["builder"] }
+twilight-model = "0.18"
+twilight-cache-inmemory = "0.18"
+twilight-util = { version = "0.18", features = ["builder"] }
 sea-orm = { version = "2", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }
 tokio = { version = "1", features = ["full"] }
 futures = "0.3"
