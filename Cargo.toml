@@ -8,7 +8,7 @@ name = "cleanup"
 path = "src/bin/cleanup.rs"
 
 [dependencies]
-twilight-gateway = "0.17"
+twilight-gateway = "0.18"
 twilight-http = "0.17"
 twilight-model = "0.17"
 twilight-cache-inmemory = "0.17"
